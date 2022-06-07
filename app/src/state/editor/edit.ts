@@ -4,7 +4,10 @@ import {
   Document,
   serializeDocument,
   Source,
+  UuidExtension,
   V3DocumentItem,
+  V3ParagraphStartItem,
+  V3TextItem,
   V3TimedDocumentItem,
 } from '../../core/document';
 import { clipboard } from 'electron';
@@ -407,3 +410,67 @@ export const copySelectionText = createAsyncActionWithReducer<EditorState>(
     clipboard.writeText(selectedText);
   }
 );
+
+function filterContentWordLevel(content: V3DocumentItem[], filter: RegExp): V3DocumentItem[] {
+  const filteredContent: V3DocumentItem[] = [];
+  let paraStart: (V3ParagraphStartItem & UuidExtension) | null = null;
+  for (const item of content) {
+    if (item.type == 'paragraph_start') {
+      paraStart = item;
+    } else if (item.type == 'paragraph_end') {
+      if (paraStart === null) {
+        filteredContent.push(item);
+      }
+    } else if (item.type == 'text' && filter.test(item.text)) {
+      if (paraStart !== null) {
+        filteredContent.push(paraStart);
+        paraStart = null;
+      }
+      filteredContent.push(item);
+    }
+  }
+  return filteredContent;
+}
+
+function paraToText(content: V3DocumentItem[]): string {
+  return content
+    .filter((x): x is V3TextItem & UuidExtension => x.type == 'text')
+    .map((x) => x.text)
+    .join(' ');
+}
+function filterContentParagraphLevel(content: V3DocumentItem[], filter: RegExp): V3DocumentItem[] {
+  const filteredContent: V3DocumentItem[] = [];
+  let para = [];
+  for (const item of content) {
+    if (item.type !== 'paragraph_end') {
+      para.push(item);
+    } else {
+      const text = paraToText(para);
+      if (filter.test(text)) {
+        filteredContent.push(...para, item);
+      }
+      para = [];
+    }
+  }
+  return filteredContent;
+}
+
+export const filterContent = createActionWithReducer<
+  EditorState,
+  { searchString: string; level: 'word' | 'paragraph'; caseInsensitive: boolean }
+>('editor/filterContent', (state, { searchString, level, caseInsensitive }) => {
+  const regex = new RegExp(searchString, caseInsensitive ? 'i' : '');
+  let filteredContent: V3DocumentItem[];
+  if (level == 'word') {
+    filteredContent = filterContentWordLevel(state.document.content, regex);
+  } else {
+    filteredContent = filterContentParagraphLevel(state.document.content, regex);
+  }
+  if (filteredContent.length == 0) {
+    filteredContent = [
+      { type: 'paragraph_start', speaker: '', language: null, uuid: uuidv4() },
+      { type: 'paragraph_end', uuid: uuidv4() },
+    ];
+  }
+  state.document.content = filteredContent;
+});

@@ -36,6 +36,13 @@ export const setExportPopup = createActionWithReducer<EditorState, ExportPopupSt
   }
 );
 
+export const setFilterPopup = createActionWithReducer<EditorState, boolean>(
+  'editor/setFilterPopup',
+  (state, payload) => {
+    state.filterPopup = payload;
+  }
+);
+
 export const setExportState = createActionWithReducer<
   EditorState,
   { running: boolean; progress: number }

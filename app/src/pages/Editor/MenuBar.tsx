@@ -6,6 +6,7 @@ import { ActionCreators } from 'redux-undo';
 import { copy, cut, paste } from '../../state/editor/edit';
 import { selectAll } from '../../state/editor/selection';
 import {
+  setFilterPopup,
   toggleDisplayConfidence,
   toggleDisplaySpeakerNames,
   toggleDisplayVideo,
@@ -76,6 +77,9 @@ export function EditorMenuBar(): JSX.Element {
           callback={() => dispatch(ActionCreators.redo())}
           accelerator={'CommandOrControl+Shift+Z, CommandOrControl+Y'}
         />
+
+        <MenuSeparator />
+
         <MenuItem
           label={'Cut'}
           callback={() => dispatch(cut())}
@@ -98,6 +102,14 @@ export function EditorMenuBar(): JSX.Element {
           label={'Select All'}
           callback={() => dispatch(selectAll())}
           accelerator={'CommandOrControl+A'}
+        />
+
+        <MenuSeparator />
+
+        <MenuItem
+          label={'Filter document'}
+          callback={() => dispatch(setFilterPopup(true))}
+          accelerator={'CommandOrControl+Shift+F'}
         />
       </MenuGroup>
       <MenuGroup label={'View'}>
