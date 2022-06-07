@@ -11,13 +11,7 @@ import {
   toggleDisplayVideo,
 } from '../../state/editor/display';
 import React from 'react';
-import {
-  MenuBar,
-  MenuCheckbox,
-  MenuGroup,
-  MenuItem,
-  MenuSeparator,
-} from '../../components/MenuBar';
+import { MenuBar, MenuCheckbox, MenuGroup, MenuItem, MenuSeparator } from '../../components/Menu';
 
 export function EditorMenuBar(): JSX.Element {
   const dispatch = useDispatch();

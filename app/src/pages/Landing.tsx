@@ -19,7 +19,7 @@ import {
 import { LandingTour } from '../tour/LandingTour';
 import { openDocumentFromDisk, openDocumentFromMemory } from '../state/editor/io';
 import { emptyDocument } from '../core/document';
-import { MenuBar, MenuGroup, MenuItem } from '../components/MenuBar';
+import { MenuBar, MenuGroup, MenuItem } from '../components/Menu';
 import { RootState } from '../state';
 import { shell } from 'electron';
 

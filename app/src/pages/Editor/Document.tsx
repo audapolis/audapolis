@@ -1,4 +1,4 @@
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector, useStore } from 'react-redux';
 import { RootState } from '../../state';
 import { TimedDocumentItem } from '../../core/document';
 import * as React from 'react';
@@ -6,7 +6,6 @@ import { KeyboardEventHandler, MouseEventHandler, RefObject, useEffect, useRef }
 import { Cursor } from './Cursor';
 import { Paragraph } from './Paragraph';
 import { basename, extname } from 'path';
-import { SelectionMenu } from './SelectionMenu';
 import { Heading, majorScale, Pane, useTheme } from 'evergreen-ui';
 import styled from 'styled-components';
 import {
@@ -14,9 +13,10 @@ import {
   moveSelectionHeadLeft,
   moveSelectionHeadRight,
   setSelection,
+  selectAll,
 } from '../../state/editor/selection';
 import { goLeft, goRight, setUserIndex } from '../../state/editor/play';
-import { deleteSomething } from '../../state/editor/edit';
+import { copy, copySelectionText, deleteSomething, paste } from '../../state/editor/edit';
 import { Theme } from '../../components/theme';
 import {
   memoizedMacroItems,
@@ -25,6 +25,8 @@ import {
 } from '../../state/editor/selectors';
 import { Dispatch } from '@reduxjs/toolkit';
 import { startTranscriptCorrection } from '../../state/editor/transcript_correction';
+import { MenuItem, MenuSeparator, showContextMenu } from '../../components/Menu';
+import { setExportPopup } from '../../state/editor/display';
 
 const DocumentContainer = styled.div<{ displaySpeakerNames: boolean }>`
   position: relative;
@@ -70,15 +72,21 @@ export function Document(): JSX.Element {
     ref.current && ref.current.focus();
   }, [ref.current]);
 
-  const mouseDownHandler: MouseEventHandler = (e) => {
-    if (e.detail != 1 || e.buttons != 1) return;
+  const disableMouseMove = useRef(false); // this is a hack to counter some unintuitive behaviour after opening the context menu
 
+  const mouseDownHandler: MouseEventHandler = (e) => {
     e.preventDefault();
+    if (e.buttons != 1 || e.detail != 1) {
+      return;
+    }
+
+    disableMouseMove.current = false;
+
     ref.current?.focus(); // sometimes we loose focus and then it is nice to be able to gain it back
 
-    if (e.detail == 1 && !e.shiftKey) {
+    if (!e.shiftKey) {
       handleWordClick(dispatch, content, e);
-    } else if (e.detail == 1 && e.shiftKey) {
+    } else if (e.shiftKey) {
       const index = indexAtPosition(content, e.clientX, e.clientY, 50);
       if (index) {
         dispatch(moveSelectionHeadTo(index));
@@ -86,8 +94,71 @@ export function Document(): JSX.Element {
     }
   };
 
+  const store = useStore();
+  const getState = (): RootState => store.getState();
+  const contextMenuHandler: MouseEventHandler = (e) => {
+    e.preventDefault();
+    if (!getState().editor.present?.selection) {
+      const index = indexAtPosition(content, e.clientX, e.clientY, 100);
+      if (index) {
+        dispatch(setSelection({ startIndex: index, length: 1, headPosition: 'left' }));
+      }
+    }
+
+    disableMouseMove.current = true;
+    if (getState().editor.present?.selection) {
+      showContextMenu(
+        <>
+          <MenuItem
+            label={'Correct Transcript of Selection'}
+            accelerator={'i'}
+            callback={() => dispatch(startTranscriptCorrection('left'))}
+          />
+          <MenuItem
+            label={'Export Selection'}
+            callback={() => dispatch(setExportPopup('selection'))}
+          />
+
+          <MenuSeparator />
+
+          <MenuItem
+            label={'Select All'}
+            accelerator={'CmdOrCtrl+A'}
+            callback={() => dispatch(selectAll())}
+          />
+          <MenuItem label={'Copy Text'} callback={() => dispatch(copySelectionText())} />
+          <MenuItem
+            label={'Copy Content'}
+            accelerator={'CmdOrCtrl+C'}
+            callback={() => dispatch(copy())}
+          />
+          <MenuItem
+            label={'Paste replacing Selection'}
+            callback={() => dispatch(paste())}
+            accelerator={'CmdOrCtrl+V'}
+          />
+        </>
+      );
+    } else {
+      showContextMenu(
+        <>
+          <MenuItem
+            label={'Select All'}
+            accelerator={'CmdOrCtrl+A'}
+            callback={() => dispatch(selectAll())}
+          />
+          <MenuItem
+            label={'Paste at Cursor Position'}
+            callback={() => dispatch(paste())}
+            accelerator={'CmdOrCtrl+V'}
+          />
+        </>
+      );
+    }
+  };
+
   const mouseMoveHandler: MouseEventHandler = (e) => {
-    if (e.buttons != 1) return;
+    if (e.buttons != 1 || disableMouseMove.current) return;
     e.preventDefault();
 
     const index = indexAtPosition(content, e.clientX, e.clientY);
@@ -134,12 +205,12 @@ export function Document(): JSX.Element {
       ref={ref}
       displaySpeakerNames={displaySpeakerNames}
       onMouseDown={mouseDownHandler}
+      onContextMenu={contextMenuHandler}
       onMouseMove={mouseMoveHandler}
       tabIndex={1}
       onKeyDown={keyDownHandler}
     >
       <Cursor />
-      <SelectionMenu documentRef={ref} />
       <SelectionApply documentRef={ref} />
 
       <Pane display={'flex'} flexDirection={'row'} marginBottom={majorScale(4)}>

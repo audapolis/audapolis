@@ -31,22 +31,36 @@ export function getHomePath(): Promise<string> {
   return ipcRenderer.invoke('get-home-path');
 }
 
-export function setMenu(contents: MenuItemConstructorOptionsIpc[]): void {
-  ipcRenderer.send('set-menu', contents);
+export function setMenuBar(contents: MenuItemConstructorOptionsIpc[]): void {
+  ipcRenderer.send('set-menubar', contents);
 }
 
-export function showMenu(): void {
-  ipcRenderer.send('show-menu');
+export function showMenuBar(): void {
+  ipcRenderer.send('show-menubar');
 }
 
-export function subscribeMenuClick(callback: (uuid: string) => void): void {
-  ipcRenderer.on('menu-click', (e, payload) => {
+export function subscribeMenuBarClick(callback: (uuid: string) => void): void {
+  ipcRenderer.on('menubar-click', (e, payload) => {
     callback(payload);
   });
 }
 
-export function unsubscribeAllMenuClick(): void {
-  ipcRenderer.removeAllListeners('menu-click');
+export function unsubscribeAllMenuBarClick(): void {
+  ipcRenderer.removeAllListeners('menubar-click');
+}
+
+export function showContextMenu(contents: MenuItemConstructorOptionsIpc[]): void {
+  ipcRenderer.send('show-contextmenu', contents);
+}
+
+export function subscribeContextMenuClick(callback: (uuid: string) => void): void {
+  ipcRenderer.on('contextmenu-click', (e, payload) => {
+    callback(payload);
+  });
+}
+
+export function unsubscribeAllContextMenuClick(): void {
+  ipcRenderer.removeAllListeners('contextmenu-click');
 }
 
 export function requestLocalServerInfo(): void {

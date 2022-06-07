@@ -2,7 +2,7 @@ import { app, BrowserWindow, dialog, ipcMain, shell } from 'electron';
 import { assertSome } from '../src/util';
 import path from 'path';
 import fs from 'fs';
-import { menuMap, setMenu } from '../main_process/menu';
+import { setMenuBar, showMenuBar, showContextMenu } from '../main_process/menu';
 import { sendAll } from '../main_process/windowList';
 import { serverInfo } from '../main_process/server';
 import { ServerInfo } from '../main_process/types';
@@ -47,23 +47,30 @@ ipcMain.handle('get-about', () => {
   }
 });
 
-ipcMain.on('set-menu', (event, args) => {
+ipcMain.on('set-menubar', (event, args) => {
   const win = BrowserWindow.fromWebContents(event.sender);
   assertSome(win);
-  setMenu(win, args);
+  setMenuBar(win, args);
 });
 
-ipcMain.on('show-menu', (event) => {
+ipcMain.on('show-menubar', (event) => {
   const win = BrowserWindow.fromWebContents(event.sender);
   assertSome(win);
-  menuMap[win.id].menu.popup({
-    x: 0,
-    y: 55,
-  });
+  showMenuBar(win);
 });
 
-export function menuClick(window: BrowserWindow, uuid: string): void {
-  window.webContents.send('menu-click', uuid);
+export function menuBarClick(window: BrowserWindow, uuid: string): void {
+  window.webContents.send('menubar-click', uuid);
+}
+
+ipcMain.on('show-contextmenu', (event, args) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  assertSome(win);
+  showContextMenu(win, args);
+});
+
+export function contextMenuClick(window: BrowserWindow, uuid: string): void {
+  window.webContents.send('contextmenu-click', uuid);
 }
 
 export function publishServerInfo(update?: Partial<ServerInfo>): void {

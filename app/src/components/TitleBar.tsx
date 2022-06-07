@@ -2,7 +2,7 @@ import styled from 'styled-components';
 import * as React from 'react';
 import { platform } from 'os';
 import { CrossIcon, MenuIcon, Heading, IconButton } from 'evergreen-ui';
-import { showMenu } from '../../ipc/ipc_renderer';
+import { showMenuBar } from '../../ipc/ipc_renderer';
 
 function getWindowControlsRect(): DOMRect {
   const windowControlsOverlay = window.navigator.windowControlsOverlay;
@@ -72,7 +72,7 @@ export function TitleBar({ children }: { children?: React.ReactNode }): JSX.Elem
         doRender={platform() != 'darwin'}
         side={'left'}
         onClick={() => {
-          showMenu();
+          showMenuBar();
         }}
         icon={MenuIcon}
       />

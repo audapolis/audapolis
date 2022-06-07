@@ -4,7 +4,10 @@ export interface PatchType {
   click?: string;
   submenu?: MenuItemConstructorOptionsIpc[];
 }
-export type MenuItemConstructorOptionsIpc = Exclude<MenuItemConstructorOptions, PatchType> &
+export type MenuItemConstructorOptionsIpc = Omit<
+  Omit<MenuItemConstructorOptions, 'click'>,
+  'submenu'
+> &
   PatchType;
 
 export interface ServerInfo {

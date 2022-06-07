@@ -63,14 +63,14 @@ export const createWindow = (): void => {
 
   windowList.push(window);
   window.on('close', () => {
-    setMenu(window, []);
+    setMenuBar(window, []);
     const i = windowList.findIndex((x) => x == window);
     windowList.splice(i, 1);
   });
 
-  setMenu(window, []);
+  setMenuBar(window, []);
   window.on('focus', () => {
-    applyMenu(window);
+    applyMenuBar(window);
   });
   window.on('blur', () => {
     unregisterAccelerators();
@@ -150,5 +150,5 @@ app.on('activate', () => {
 import '../ipc/ipc_main';
 import './server';
 import { windowList } from './windowList';
-import { applyMenu, setMenu, unregisterAccelerators } from './menu';
+import { applyMenuBar, setMenuBar, unregisterAccelerators } from './menu';
 import { isRunningInTest } from '../src/util';

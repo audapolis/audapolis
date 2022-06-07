@@ -2,18 +2,26 @@ import { MenuItemConstructorOptions } from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 import { MenuItemConstructorOptionsIpc } from '../../main_process/types';
 import {
-  subscribeMenuClick,
-  unsubscribeAllMenuClick,
-  setMenu as setMenuIpc,
+  subscribeMenuBarClick,
+  unsubscribeAllMenuBarClick,
+  setMenuBar as setMenuBarIpc,
+  showContextMenu as showContextMenuIpc,
+  unsubscribeAllContextMenuClick,
+  subscribeContextMenuClick,
 } from '../../ipc/ipc_renderer';
 import React, { useEffect } from 'react';
 
 function transformReactMenuTreeToMenuItemConstructorOptions(
   children: MenuChildren
 ): MenuItemConstructorOptions[] {
-  if (!Array.isArray(children)) {
+  if (!Array.isArray(children) && children.type == React.Fragment) {
+    return transformReactMenuTreeToMenuItemConstructorOptions(
+      (children.props as { children: MenuChildren }).children
+    );
+  } else if (!Array.isArray(children)) {
     children = [children];
   }
+
   return children.map((x) => {
     if (x.type == MenuItem) {
       const props = x.props as MenuItemProps;
@@ -36,6 +44,7 @@ function transformReactMenuTreeToMenuItemConstructorOptions(
         submenu: transformReactMenuTreeToMenuItemConstructorOptions(props.children),
       };
     } else {
+      console.warn(x);
       throw Error('Unknown component encountered in Menubar');
     }
   });
@@ -93,29 +102,50 @@ export function MenuGroup(_props: MenuGroupProps): JSX.Element {
 }
 
 export function setMenu(menu: MenuItemConstructorOptions[]): void {
-  const listeners: Record<string, () => void> = {};
-  const transformMenuTemplate = (
-    x: MenuItemConstructorOptions[]
-  ): MenuItemConstructorOptionsIpc[] => {
-    const transformClick = (click: (...args: any) => void): string | undefined => {
-      const uuid = uuidv4();
-      listeners[uuid] = click;
-      return uuid;
-    };
-    return x.map(
-      (x) =>
-        ({
-          ...x,
-          click: x.click && transformClick(x.click),
-          submenu: x.submenu && transformMenuTemplate(x.submenu as MenuItemConstructorOptions[]),
-        } as MenuItemConstructorOptionsIpc)
-    );
-  };
-  const transformed = transformMenuTemplate(menu);
-
-  unsubscribeAllMenuClick();
-  subscribeMenuClick((uuid) => {
+  const [transformed, listeners] = transformMenuTemplate(menu);
+  unsubscribeAllMenuBarClick();
+  subscribeMenuBarClick((uuid) => {
     listeners[uuid]();
   });
-  setMenuIpc(transformed);
+  setMenuBarIpc(transformed);
+}
+
+export function showContextMenu(reactMenu: MenuChildren): void {
+  const menuItemConstructorOptions = transformReactMenuTreeToMenuItemConstructorOptions(reactMenu);
+  const [transformed, listeners] = transformMenuTemplate(menuItemConstructorOptions);
+  unsubscribeAllContextMenuClick();
+  subscribeContextMenuClick((uuid) => {
+    listeners[uuid]();
+  });
+  showContextMenuIpc(transformed);
+}
+
+function transformMenuTemplate(
+  x: MenuItemConstructorOptions[]
+): [MenuItemConstructorOptionsIpc[], Record<string, () => void>] {
+  const listeners: Record<string, () => void> = {};
+
+  const transformClick = (click: (...args: any) => void): string | undefined => {
+    const uuid = uuidv4();
+    listeners[uuid] = click;
+    return uuid;
+  };
+  const transformed = x.map((x): MenuItemConstructorOptionsIpc => {
+    if (Array.isArray(x.submenu)) {
+      const [submenu, subListeners] = transformMenuTemplate(x.submenu);
+      Object.assign(listeners, subListeners);
+      return {
+        ...x,
+        click: x.click && transformClick(x.click),
+        submenu,
+      };
+    } else {
+      return {
+        ...x,
+        click: x.click && transformClick(x.click),
+        submenu: undefined,
+      };
+    }
+  });
+  return [transformed, listeners];
 }
