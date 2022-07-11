@@ -6,6 +6,7 @@ import { menuMap, setMenu } from '../main_process/menu';
 import { sendAll } from '../main_process/windowList';
 import { serverInfo } from '../main_process/server';
 import { ServerInfo } from '../main_process/types';
+import { logFilePath } from '../src/util/log';
 
 ipcMain.handle('open-file', (event, options) => {
   const win = BrowserWindow.fromWebContents(event.sender);
@@ -87,6 +88,10 @@ ipcMain.on('local-server-request', () => {
 
 export function openAbout(window: BrowserWindow): void {
   window.webContents.send('open-about');
+}
+
+export function exportDebugLog(window: BrowserWindow): void {
+  window.webContents.send('export-debug-log', logFilePath);
 }
 
 ipcMain.handle('get-home-path', () => {

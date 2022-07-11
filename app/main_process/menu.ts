@@ -1,7 +1,7 @@
 import { BrowserWindow, globalShortcut, Menu, MenuItemConstructorOptions, shell } from 'electron';
 import { createWindow } from './index';
 import { MenuItemConstructorOptionsIpc } from './types';
-import { menuClick, openAbout } from '../ipc/ipc_main';
+import { exportDebugLog, menuClick, openAbout } from '../ipc/ipc_main';
 
 type ShortcutMap = Record<string, string>;
 export const menuMap: Record<number, { menu: Menu; accelerators: ShortcutMap }> = {};
@@ -85,6 +85,10 @@ export function setMenu(window: BrowserWindow, args: MenuItemConstructorOptionsI
         {
           label: 'About',
           click: () => openAbout(window),
+        },
+        {
+          label: 'Export debug log',
+          click: async () => await exportDebugLog(window),
         },
         {
           label: 'Learn More',

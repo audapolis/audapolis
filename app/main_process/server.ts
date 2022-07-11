@@ -74,7 +74,7 @@ function startServer() {
     return;
   }
   serverProcess.stdout.on('data', (data: Buffer) => {
-    console.log(`server-stdout: ${data}`);
+    console.log('server-stdout', data.toString());
     try {
       const parsed_data: ServerStartingMessage | ServerStartedMessage = JSON.parse(data.toString());
       if (parsed_data.msg == 'server_starting') {

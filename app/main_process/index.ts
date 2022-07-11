@@ -5,6 +5,8 @@ import installExtension, {
 } from 'electron-devtools-installer';
 import { autoUpdater } from 'electron-updater';
 
+initLog('main');
+
 export const createWindow = (): void => {
   const window = new BrowserWindow({
     height: 600,
@@ -152,3 +154,4 @@ import './server';
 import { windowList } from './windowList';
 import { applyMenu, setMenu, unregisterAccelerators } from './menu';
 import { isRunningInTest } from '../src/util';
+import { initLog } from '../src/util/log';

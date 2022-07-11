@@ -85,6 +85,7 @@
     "electron-updater": "^4.6.5",
     "evergreen-ui": "^6.7.0",
     "ffmpeg-static": "^4.4.0",
+    "glob": "^8.0.3",
     "immer": "^9.0.6",
     "jszip": "^3.7.1",
     "lodash": "^4.17.21",

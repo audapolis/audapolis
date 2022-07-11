@@ -4,6 +4,7 @@
 
 import {
   ipcRenderer,
+  IpcRendererEvent,
   OpenDialogOptions,
   OpenDialogReturnValue,
   SaveDialogOptions,
@@ -67,4 +68,10 @@ export function subscribeLocalServerInfo(callback: (stderr: ServerInfo) => void)
 
 export function subscribeOpenAbout(callback: () => void): void {
   ipcRenderer.on('open-about', callback);
+}
+
+export function subscribeExportDebugLog(
+  callback: (_event: IpcRendererEvent, _a0: string) => void
+): void {
+  ipcRenderer.on('export-debug-log', callback);
 }
