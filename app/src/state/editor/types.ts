@@ -47,6 +47,8 @@ export interface EditorState {
   exportState: ExportState;
   exportPopup: ExportPopupState;
 
+  filterPopup: boolean;
+
   transcriptCorrectionState: string | null;
 }
 
@@ -77,6 +79,7 @@ export const defaultEditorState: EditorState = {
   displayConfidence: false,
 
   exportPopup: 'hidden',
+  filterPopup: false,
 
   transcriptCorrectionState: null,
 };

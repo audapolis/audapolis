@@ -11,6 +11,7 @@ import { EditorTour } from '../../tour/EditorTour';
 import { togglePlaying } from '../../state/editor/play';
 import { insertParagraphEnd } from '../../state/editor/edit';
 import { EditorMenuBar } from './MenuBar';
+import { FilterDialog } from './Filter';
 
 const MainContainer = styled(MainCenterColumn)`
   justify-content: start;
@@ -39,6 +40,7 @@ export function EditorPage(): JSX.Element {
 
       <EditorTitleBar />
       <ExportDocumentDialog />
+      <FilterDialog />
 
       <MainContainer id={'scroll-container'}>
         <Document />
